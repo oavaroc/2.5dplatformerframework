@@ -59,6 +59,8 @@ public class Player : MonoBehaviour
         }
 
         _anim = GetComponentInChildren<Animator>();
+
+        UIManager.Instance.UpdateLives(3);
     }
 
     private void Dash_performed(UnityEngine.InputSystem.InputAction.CallbackContext obj)
