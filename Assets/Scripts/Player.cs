@@ -31,6 +31,8 @@ public class Player : MonoBehaviour
 
     [SerializeField]
     private GameObject _climbUpPoint;
+    [SerializeField]
+    private GameObject _dashPoint;
 
     private bool _grabbingLedge = false;
     private bool _climbingUp = false;
@@ -41,11 +43,14 @@ public class Player : MonoBehaviour
     private Transform _ladderTop;
     private Transform _ladderBottom;
 
+    private bool _inRoll = false;
+
     // Start is called before the first frame update
     void Start()
     {
         _input = new PlayerInputActions();
         _input.Player.Enable();
+        _input.Player.Dash.performed += Dash_performed;
 
         _characterController = GetComponent<CharacterController>();
         if (_characterController == null)
@@ -56,16 +61,30 @@ public class Player : MonoBehaviour
         _anim = GetComponentInChildren<Animator>();
     }
 
+    private void Dash_performed(UnityEngine.InputSystem.InputAction.CallbackContext obj)
+    {
+        if (_characterController.enabled && !_jumping )
+        {
+            _inRoll = true;
+            _characterController.enabled = false;
+            _anim.SetBool("PlayerRoll",true);
+        }
+    }
+
     // Update is called once per frame
     void Update()
     {
-        if (_characterController.enabled)
+        if (!_inRoll)
         {
-            HandleMovement();
+            if (_characterController.enabled)
+            {
+                HandleMovement();
 
-        }else
-        {
-            HandleNonControllerMovement();
+            }else
+            {
+                HandleNonControllerMovement();
+            }
+
         }
     }
     private void HandleLedgeClimb()
@@ -219,5 +238,13 @@ public class Player : MonoBehaviour
     public void SetReachLadder(bool reached)
     {
         _reachedLadder = reached;
+    }
+
+    public void GoToDashPoint()
+    {
+        _anim.SetBool("PlayerRoll", false);
+        _inRoll = false;
+        transform.position = _dashPoint.transform.position;
+        _characterController.enabled = true;
     }
 }
