@@ -22,7 +22,7 @@ public class DashBehaviour : StateMachineBehaviour
         Player player = animator.GetComponentInParent<Player>();
         if (player != null)
         {
-            player.GoToDashPoint();
+            //player.GoToDashPoint();
         }
         else
         {

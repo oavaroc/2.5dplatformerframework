@@ -12,7 +12,6 @@ public class Player : MonoBehaviour
     private float _jumpHeight;
     [SerializeField]
     private float _gravity;
-    private float _horizontalDirection=0;
 
     [SerializeField]
     private int _maxJumps = 2;
@@ -26,24 +25,24 @@ public class Player : MonoBehaviour
 
     private Animator _anim;
 
-    private bool _goingRight = true;
     private bool _jumping = false;
 
     [SerializeField]
     private GameObject _climbUpPoint;
-    [SerializeField]
-    private GameObject _dashPoint;
 
     private bool _grabbingLedge = false;
     private bool _climbingUp = false;
 
     private bool _climbingLadder = false;
-    private bool _reachedLadder = false;
 
     private Transform _ladderTop;
     private Transform _ladderBottom;
 
     private bool _inRoll = false;
+
+
+    [SerializeField] private float _rollSpeed = 10f;
+    [SerializeField] private float _rollDuration = 0.5f;
 
     // Start is called before the first frame update
     void Start()
@@ -67,10 +66,16 @@ public class Player : MonoBehaviour
     {
         if (_characterController.enabled && !_jumping )
         {
-            _inRoll = true;
-            _characterController.enabled = false;
-            _anim.SetBool("PlayerRoll",true);
+
+            if (Input.GetKeyDown(KeyCode.LeftShift) && !_inRoll)
+            {
+                StartCoroutine(PerformDodgeRoll());
+            }
         }
+    }
+    private void OnDestroy()
+    {
+        _input.Player.Dash.performed -= Dash_performed;
     }
 
     // Update is called once per frame
@@ -124,52 +129,83 @@ public class Player : MonoBehaviour
         }
         else if (_climbingLadder)
         {
-            if(_input.Player.LadderClimb.ReadValue<float>() != 0)
-                HandleLadderClimb();
-            if (_ladderTop.position.y - transform.position.y <= 1 || transform.position.y - _ladderBottom.position.y <= 1)
-                HandleFinishLadder();
-            _anim.SetBool("ActiveLadder", Mathf.Abs(_input.Player.LadderClimb.ReadValue<float>()) > 0);
+            HandleLaddeClimbLogic();
         }
+    }
+    private void HandleLaddeClimbLogic()
+    {
+        if(_input.Player.LadderClimb.ReadValue<float>() != 0)// if moving on the ladder, handle the logic
+            HandleLadderClimb();
+        if (_ladderTop.position.y - transform.position.y <= 1 || transform.position.y - _ladderBottom.position.y <= 1)// at the top/bottom, exit ladder climb
+            HandleFinishLadder();
+        _anim.SetBool("ActiveLadder", Mathf.Abs(_input.Player.LadderClimb.ReadValue<float>()) > 0);//if the character is moving, play climb/descend ladder anim
+
     }
     private void HandleMovement()
     {
         _movementDirection = new Vector3(0, 0, _input.Player.HorizontalMovement.ReadValue<float>()) * _speed;
-        if(_input.Player.HorizontalMovement.ReadValue<float>() > 0)
-        {
-            transform.rotation = new Quaternion(0,0,0,0);
-        }
-        else if(_input.Player.HorizontalMovement.ReadValue<float>() < 0)
-        {
-            transform.rotation = new Quaternion(0, 180, 0, 0);
-        }
+        PerformMovementAlterations(_movementDirection);
+    }
+
+    private void ApplyGravity()
+    {
+        _yVelocity -= _gravity;
+
+    }
+
+    private void PerformMovementAlterations(Vector3 _movementDirection)
+    {
+        RotateCharacterTowardsMovement();
         if (_characterController.isGrounded)
         {
-            if (_jumping)
-            {
-                _jumping = false;
-                //_anim.SetBool("Jumping", _jumping);
-                //_anim.SetTrigger("JumpingTrigger");
-            }
-            _anim.SetFloat("Speed", Mathf.Abs(_movementDirection.z));
-            _jumpsAvailable=0;
-            _yVelocity = 0;
+            GroundedMovementCalculations();
         }
         else
         {
-            _yVelocity -= _gravity;
+            ApplyGravity();
         }
         HandleJump();
+        MoveCharacter(_movementDirection);
 
+    }
+
+    private void RotateCharacterTowardsMovement()
+    {
+
+        if (_input.Player.HorizontalMovement.ReadValue<float>() > 0)
+        {
+            transform.rotation = new Quaternion(0, 0, 0, 0);
+        }
+        else if (_input.Player.HorizontalMovement.ReadValue<float>() < 0)
+        {
+            transform.rotation = new Quaternion(0, 180, 0, 0);
+        }
+    }
+
+    private void GroundedMovementCalculations()
+    {
+        if (_jumping)
+        {
+            _jumping = false;
+            _anim.ResetTrigger("JumpingTrigger");
+        }
+        _anim.SetFloat("Speed", Mathf.Abs(_movementDirection.z));
+        _jumpsAvailable = 0;
+        _yVelocity = 0;
+    }
+
+    private void MoveCharacter(Vector3 _movementDirection)
+    {
         _movementDirection.y = _yVelocity;
         _characterController.Move(_movementDirection  * Time.deltaTime);
 
     }
+
     private void HandleJump()
     {
         if (_input.Player.Jump.WasPressedThisFrame() && _jumpsAvailable < _maxJumps)
         {
             _jumping = true;
-            //_anim.SetBool("Jumping", _jumping);
             _anim.SetTrigger("JumpingTrigger");
             _jumpsAvailable++;
             _yVelocity = _jumpHeight;
@@ -204,12 +240,14 @@ public class Player : MonoBehaviour
         _anim.SetBool("StartLadder", _climbingLadder);
         _anim.SetBool("ClimbingDown", false);
         _characterController.enabled = false;
+        _anim.SetFloat("Speed", 0);
         transform.position = position;
     }
 
     public void StopClimbingLadder(Vector3 position)
     {
-        //_climbingLadder = false;
+        Debug.Log("Is it coming here?");
+
         _anim.SetBool("StartLadder", _climbingLadder);
         transform.position = position;
         _characterController.enabled = true;
@@ -218,11 +256,8 @@ public class Player : MonoBehaviour
         if (_climbingLadder &&  (_ladderTop.position.y - transform.position.y <= 1 || transform.position.y - _ladderBottom.position.y <= 1))
         {
             Debug.Log("Stopping ladder");
-            //needs to be outside of if w/s is pressed
-            //trigger dismount anim
             Debug.Log("Dismount start");
             ClimbUp();
-            //_anim.speed = 1;
             _climbingLadder = false;
             _anim.SetBool("StartLadder", _climbingLadder);
             transform.position = _climbUpPoint.transform.position;
@@ -237,16 +272,31 @@ public class Player : MonoBehaviour
         return _climbingLadder;
     }
 
-    public void SetReachLadder(bool reached)
-    {
-        _reachedLadder = reached;
-    }
 
-    public void GoToDashPoint()
+    private IEnumerator PerformDodgeRoll()
     {
-        _anim.SetBool("PlayerRoll", false);
+        // Set flag to prevent multiple rolls at the same time
+        _inRoll = true;
+
+        // Trigger the dodge roll animation
+        _anim.SetBool("PlayerRoll", _inRoll);
+
+        // Calculate the dodge direction based on player input (you may need to modify this based on your character's setup)
+        Vector3 dodgeDirection = transform.forward;
+
+        // Apply the dodge roll movement
+        float rollTimer = 0f;
+        while (rollTimer < _rollDuration)
+        {
+            //_characterController.Move(dodgeDirection * _rollSpeed * Time.deltaTime);
+            ApplyGravity();
+            MoveCharacter(dodgeDirection * _rollSpeed);
+            rollTimer += Time.deltaTime;
+            yield return null;
+        }
+
+        // Reset the flag
         _inRoll = false;
-        transform.position = _dashPoint.transform.position;
-        _characterController.enabled = true;
+        _anim.SetBool("PlayerRoll", _inRoll);
     }
 }
