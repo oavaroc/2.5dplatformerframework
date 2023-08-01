@@ -23,10 +23,12 @@ public class ClimbingUpBehavior : StateMachineBehaviour
         if (player != null)
         {
             player.ClimbUp();
+            animator.ResetTrigger("JumpingTrigger");
+            animator.SetFloat("Speed",0f);
         }
         else
         {
-            Debug.Log("Player is null in blimb up behavior");
+            Debug.Log("Player is null in climb up behavior");
         }
     }
 

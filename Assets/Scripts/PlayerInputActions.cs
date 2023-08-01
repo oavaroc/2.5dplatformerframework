@@ -53,6 +53,15 @@ public partial class @PlayerInputActions : IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""LadderClimb"",
+                    ""type"": ""Button"",
+                    ""id"": ""57c7bbf1-7b82-4d47-85a1-5317158e8d6f"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -110,6 +119,39 @@ public partial class @PlayerInputActions : IInputActionCollection2, IDisposable
                     ""action"": ""ClimbUp"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": ""1D Axis"",
+                    ""id"": ""74edc54a-4ca9-49af-9236-da383965f149"",
+                    ""path"": ""1DAxis"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""LadderClimb"",
+                    ""isComposite"": true,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": ""negative"",
+                    ""id"": ""b0decfb8-8bbf-4b7a-9d96-5809254f1e79"",
+                    ""path"": ""<Keyboard>/s"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""LadderClimb"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""positive"",
+                    ""id"": ""a0f7b952-5f76-4d57-956f-4335772c9c33"",
+                    ""path"": ""<Keyboard>/w"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""LadderClimb"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
                 }
             ]
         }
@@ -121,6 +163,7 @@ public partial class @PlayerInputActions : IInputActionCollection2, IDisposable
         m_Player_HorizontalMovement = m_Player.FindAction("HorizontalMovement", throwIfNotFound: true);
         m_Player_Jump = m_Player.FindAction("Jump", throwIfNotFound: true);
         m_Player_ClimbUp = m_Player.FindAction("ClimbUp", throwIfNotFound: true);
+        m_Player_LadderClimb = m_Player.FindAction("LadderClimb", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -183,6 +226,7 @@ public partial class @PlayerInputActions : IInputActionCollection2, IDisposable
     private readonly InputAction m_Player_HorizontalMovement;
     private readonly InputAction m_Player_Jump;
     private readonly InputAction m_Player_ClimbUp;
+    private readonly InputAction m_Player_LadderClimb;
     public struct PlayerActions
     {
         private @PlayerInputActions m_Wrapper;
@@ -190,6 +234,7 @@ public partial class @PlayerInputActions : IInputActionCollection2, IDisposable
         public InputAction @HorizontalMovement => m_Wrapper.m_Player_HorizontalMovement;
         public InputAction @Jump => m_Wrapper.m_Player_Jump;
         public InputAction @ClimbUp => m_Wrapper.m_Player_ClimbUp;
+        public InputAction @LadderClimb => m_Wrapper.m_Player_LadderClimb;
         public InputActionMap Get() { return m_Wrapper.m_Player; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -208,6 +253,9 @@ public partial class @PlayerInputActions : IInputActionCollection2, IDisposable
                 @ClimbUp.started -= m_Wrapper.m_PlayerActionsCallbackInterface.OnClimbUp;
                 @ClimbUp.performed -= m_Wrapper.m_PlayerActionsCallbackInterface.OnClimbUp;
                 @ClimbUp.canceled -= m_Wrapper.m_PlayerActionsCallbackInterface.OnClimbUp;
+                @LadderClimb.started -= m_Wrapper.m_PlayerActionsCallbackInterface.OnLadderClimb;
+                @LadderClimb.performed -= m_Wrapper.m_PlayerActionsCallbackInterface.OnLadderClimb;
+                @LadderClimb.canceled -= m_Wrapper.m_PlayerActionsCallbackInterface.OnLadderClimb;
             }
             m_Wrapper.m_PlayerActionsCallbackInterface = instance;
             if (instance != null)
@@ -221,6 +269,9 @@ public partial class @PlayerInputActions : IInputActionCollection2, IDisposable
                 @ClimbUp.started += instance.OnClimbUp;
                 @ClimbUp.performed += instance.OnClimbUp;
                 @ClimbUp.canceled += instance.OnClimbUp;
+                @LadderClimb.started += instance.OnLadderClimb;
+                @LadderClimb.performed += instance.OnLadderClimb;
+                @LadderClimb.canceled += instance.OnLadderClimb;
             }
         }
     }
@@ -230,5 +281,6 @@ public partial class @PlayerInputActions : IInputActionCollection2, IDisposable
         void OnHorizontalMovement(InputAction.CallbackContext context);
         void OnJump(InputAction.CallbackContext context);
         void OnClimbUp(InputAction.CallbackContext context);
+        void OnLadderClimb(InputAction.CallbackContext context);
     }
 }

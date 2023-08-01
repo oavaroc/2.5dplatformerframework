@@ -45,4 +45,15 @@ public class MovingPlatform : MonoBehaviour
     {
         _currentDestination = (_currentDestination + 1) % _destinations.Length;
     }
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("Player"))
+            other.transform.parent = transform;
+    }
+    private void OnTriggerExit(Collider other)
+    {
+        if (other.CompareTag("Player"))
+            other.transform.parent = null;
+
+    }
 }
