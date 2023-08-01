@@ -9,10 +9,17 @@ public class UIManager : MonoSingleton<UIManager>
     private TextMeshProUGUI _ScoreCount;
     [SerializeField]
     private TextMeshProUGUI _LivesCount;
+    [SerializeField]
+    private TextMeshProUGUI _WinScreen;
 
 
     private int _Lives = 0;
     private int _Score = 0;
+
+    public int GetScore()
+    {
+        return _Score;
+    }
 
     public void AddScore(int score)
     {
@@ -26,5 +33,10 @@ public class UIManager : MonoSingleton<UIManager>
         _Lives += lives;
         _LivesCount.text = _Lives.ToString();
         return _Lives;
+    }
+
+    public void WinScreenActivate()
+    {
+        _WinScreen.gameObject.SetActive(true);
     }
 }

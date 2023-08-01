@@ -107,7 +107,7 @@ public class Player : MonoBehaviour
 
         if ((_input.Player.LadderClimb.ReadValue<float>() > 0 && transform.position.y <= _ladderTop.position.y) ||
             (_input.Player.LadderClimb.ReadValue<float>() < 0 && transform.position.y >= _ladderBottom.position.y))
-        {
+        {   //if ladder climb is positive, go up, if negative go down
             transform.position = Vector3.MoveTowards(transform.position, transform.position + (Vector3.up * _input.Player.LadderClimb.ReadValue<float>()), Time.deltaTime);// * _speed);
             _anim.SetBool("ClimbingDown", _input.Player.LadderClimb.ReadValue<float>() < 0);
         }

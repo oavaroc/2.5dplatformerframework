@@ -174,6 +174,34 @@ public partial class @PlayerInputActions : IInputActionCollection2, IDisposable
                     ""isPartOfComposite"": false
                 }
             ]
+        },
+        {
+            ""name"": ""Reload"",
+            ""id"": ""235f1f5f-b3ab-49f8-aa53-a01d42e7fc60"",
+            ""actions"": [
+                {
+                    ""name"": ""Reload"",
+                    ""type"": ""Button"",
+                    ""id"": ""95bed350-7f57-477b-aa44-7be3f2d08cfd"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                }
+            ],
+            ""bindings"": [
+                {
+                    ""name"": """",
+                    ""id"": ""617430b8-6f6e-46f9-b4e1-e9a5ab9688b0"",
+                    ""path"": ""<Keyboard>/r"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Reload"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                }
+            ]
         }
     ],
     ""controlSchemes"": []
@@ -185,6 +213,9 @@ public partial class @PlayerInputActions : IInputActionCollection2, IDisposable
         m_Player_ClimbUp = m_Player.FindAction("ClimbUp", throwIfNotFound: true);
         m_Player_LadderClimb = m_Player.FindAction("LadderClimb", throwIfNotFound: true);
         m_Player_Dash = m_Player.FindAction("Dash", throwIfNotFound: true);
+        // Reload
+        m_Reload = asset.FindActionMap("Reload", throwIfNotFound: true);
+        m_Reload_Reload = m_Reload.FindAction("Reload", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -305,6 +336,39 @@ public partial class @PlayerInputActions : IInputActionCollection2, IDisposable
         }
     }
     public PlayerActions @Player => new PlayerActions(this);
+
+    // Reload
+    private readonly InputActionMap m_Reload;
+    private IReloadActions m_ReloadActionsCallbackInterface;
+    private readonly InputAction m_Reload_Reload;
+    public struct ReloadActions
+    {
+        private @PlayerInputActions m_Wrapper;
+        public ReloadActions(@PlayerInputActions wrapper) { m_Wrapper = wrapper; }
+        public InputAction @Reload => m_Wrapper.m_Reload_Reload;
+        public InputActionMap Get() { return m_Wrapper.m_Reload; }
+        public void Enable() { Get().Enable(); }
+        public void Disable() { Get().Disable(); }
+        public bool enabled => Get().enabled;
+        public static implicit operator InputActionMap(ReloadActions set) { return set.Get(); }
+        public void SetCallbacks(IReloadActions instance)
+        {
+            if (m_Wrapper.m_ReloadActionsCallbackInterface != null)
+            {
+                @Reload.started -= m_Wrapper.m_ReloadActionsCallbackInterface.OnReload;
+                @Reload.performed -= m_Wrapper.m_ReloadActionsCallbackInterface.OnReload;
+                @Reload.canceled -= m_Wrapper.m_ReloadActionsCallbackInterface.OnReload;
+            }
+            m_Wrapper.m_ReloadActionsCallbackInterface = instance;
+            if (instance != null)
+            {
+                @Reload.started += instance.OnReload;
+                @Reload.performed += instance.OnReload;
+                @Reload.canceled += instance.OnReload;
+            }
+        }
+    }
+    public ReloadActions @Reload => new ReloadActions(this);
     public interface IPlayerActions
     {
         void OnHorizontalMovement(InputAction.CallbackContext context);
@@ -312,5 +376,9 @@ public partial class @PlayerInputActions : IInputActionCollection2, IDisposable
         void OnClimbUp(InputAction.CallbackContext context);
         void OnLadderClimb(InputAction.CallbackContext context);
         void OnDash(InputAction.CallbackContext context);
+    }
+    public interface IReloadActions
+    {
+        void OnReload(InputAction.CallbackContext context);
     }
 }
